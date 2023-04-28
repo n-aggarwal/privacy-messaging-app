@@ -41,6 +41,24 @@ const LoginScreen = ({ navigation }) => {
           type="outline"
           title="Register"
         />
+        <Button
+          onPress={() => navigation.navigate("Chat")}
+          containerStyle={styles.Button}
+          type="outline"
+          title="Chat"
+        />
+        <Button
+          onPress={() => navigation.navigate("Add Chat")}
+          containerStyle={styles.Button}
+          type="outline"
+          title="Add Chat"
+        />
+        <Button
+          onPress={() => navigation.navigate("Home")}
+          containerStyle={styles.Button}
+          type="outline"
+          title="Home"
+        />
         <View style={{ height: 5 }} />
       </View>
     </KeyboardAvoidingView>
