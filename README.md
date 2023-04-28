@@ -41,6 +41,9 @@ npm install @react-navigation/native-stack
 npm install react-native-elements
 npm install --save @react-native-google-signin/google-signin firebase
 npm install --save @react-native-firebase/app
+npx expo install firebase
+npm install uuid
+npm install @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore
 ```
 
 # Rescources

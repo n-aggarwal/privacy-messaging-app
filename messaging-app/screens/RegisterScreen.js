@@ -1,19 +1,31 @@
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
-import React, { useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { Button, Input, Image } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
+import { v4 as uuidv4 } from "uuid";
 
-const LoginScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation }) => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const signIn = () =>
-    function set_email(text) {
-      setEmail((prevEmail) => text);
-    };
+  const register = () => {};
+
+  function set_name(text) {
+    setName((prevName) => text);
+  }
+
+  function set_email(text) {
+    setEmail((prevEmail) => text);
+  }
 
   function set_password(text) {
     setPassword((prevPassword) => text);
+  }
+
+  function set_confirm_assword(text) {
+    setConfirmPassword((prevPassword) => text);
   }
 
   return (
@@ -21,22 +33,34 @@ const LoginScreen = ({ navigation }) => {
       <StatusBar style="light" />
       <View style={styles.inputContainer}>
         <Input
-          placeholder="Email"
+          placeholder="Name"
           autoFocus
+          type="text"
+          value={name}
+          onChangeText={(text) => set_name(text)}
+        />
+        <Input
+          placeholder="Email"
           type="email"
           value={email}
-          onChange={(text) => set_email(text)}
+          onChangeText={(text) => set_email(text)}
         />
         <Input
           placeholder="Password"
           secureTextEntry
           type="password"
           value={password}
-          onChange={(text) => set_password(text)}
+          onChangeText={(text) => set_password(text)}
         />
-        <Button containerStyle={styles.Button} onPress={signIn} title="Login" />
+        <Input
+          placeholder="Confirm Password"
+          secureTextEntry
+          type="password"
+          value={confirmPassword}
+          onChangeText={(text) => setConfirmPassword(text)}
+        />
         <Button
-          onPress={() => navigation.navigate("Register")}
+          onPress={register}
           containerStyle={styles.Button}
           type="outline"
           title="Register"
@@ -47,7 +71,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-export default LoginScreen;
+export default RegisterScreen;
 
 const styles = StyleSheet.create({
   container: {

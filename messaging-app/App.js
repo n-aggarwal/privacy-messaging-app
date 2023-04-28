@@ -6,11 +6,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { firebaseConfig } from "./firebaseConfig";
-
 //import screens
 import LoginScreen from "./screens/LoginScreen";
+import RegisterScreen from "./screens/RegisterScreen";
+import HomeScreen from "./screens/HomeScreen";
+import AddChatScreen from "./screens/AddChatScreen";
+import ChatScreen from "./screens/ChatScreen";
 
 // Google Auth
 
@@ -26,11 +27,14 @@ const GlobalScreenOptions = {
 
 export default function App() {
   // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={GlobalScreenOptions}>
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Add Chat" component={AddChatScreen} />
+        <Stack.Screen name="Chat" component={ChatScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
