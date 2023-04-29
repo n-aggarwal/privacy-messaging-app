@@ -17,7 +17,18 @@ const LoginScreen = ({ navigation }) => {
     return unsubscribe;
   }, []);
 
-  const signIn = () => {};
+  const signIn = () => {
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .then((authUser) => {
+        if (authUser == null) {
+          alert("Could not Verify Credentials");
+        } else {
+          navigation.replace("Home");
+        }
+      });
+  };
   function set_email(text) {
     setEmail((prevEmail) => text);
   }
