@@ -3,6 +3,7 @@ import React, { useLayoutEffect, useState } from "react";
 import { Button, Input, Image } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
 import { v4 as uuidv4 } from "uuid";
+import { firebase } from "../firebaseConfig";
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -10,7 +11,17 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const register = () => {};
+  const register = () => {
+    firebase
+      .auth()
+      .createUserWithEmailAndPassword(email, password)
+      .then((authUser) => {
+        authUser.user.updateProfile({
+          name: name,
+        });
+      })
+      .catch((error) => alert(error.message));
+  };
 
   function set_name(text) {
     setName((prevName) => text);
