@@ -1,10 +1,8 @@
-import * as firebase from "firebase";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
 
-import "firebase/auth";
-import "firebase/firestore";
-
-// Your web app's Firebase configuration
-export const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyDgdTJ1kvbJlVmBF2OY4br205qmAGHRg7A",
   authDomain: "privacy-messaging-app.firebaseapp.com",
   projectId: "privacy-messaging-app",
@@ -13,4 +11,8 @@ export const firebaseConfig = {
   appId: "1:241953969003:web:04f2bdf24bc622e26db22e",
 };
 
-firebaseApp = firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export { firebase };
