@@ -21,13 +21,7 @@ const LoginScreen = ({ navigation }) => {
     firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
-      .then((authUser) => {
-        if (authUser == null) {
-          alert("Could not Verify Credentials");
-        } else {
-          navigation.replace("Home");
-        }
-      });
+      .catch((error) => alert("Invalid Credentials"));
   };
   function set_email(text) {
     setEmail((prevEmail) => text);
@@ -73,12 +67,6 @@ const LoginScreen = ({ navigation }) => {
           containerStyle={styles.Button}
           type="outline"
           title="Add Chat"
-        />
-        <Button
-          onPress={() => navigation.navigate("Home")}
-          containerStyle={styles.Button}
-          type="outline"
-          title="Home"
         />
         <View style={{ height: 5 }} />
       </View>
