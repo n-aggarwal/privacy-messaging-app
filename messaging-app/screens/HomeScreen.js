@@ -24,26 +24,7 @@ const HomeScreen = ({ navigation }) => {
         navigation.replace("Login");
       });
   };
-  /*
-  useEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection("chat")
-      .onSnapshot((snapshot) =>
-        setChats(
-          snapshot.docs.map((doc) => ({
-            id: doc.id, //name of the chat
-            data: doc.data(), //messages?
-          }))
-        )
-        
-      );
 
-    return () => {
-      unsubscribe;
-    };
-  }, []);
-*/
   useEffect(() => {
     const unsubscribe = firebase
       .firestore()
@@ -90,6 +71,10 @@ const HomeScreen = ({ navigation }) => {
       ),
     });
   }, [navigation]);
+
+  const enterChat = (id, chatname) => {
+    navigation.navigate("Chat", { id, chatname });
+  };
 
   return (
     <SafeAreaView>
