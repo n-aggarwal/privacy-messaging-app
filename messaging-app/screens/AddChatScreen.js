@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import { Button, Input } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
+import { firebase } from "../firebaseConfig";
 
 const AddChatScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
@@ -13,7 +14,15 @@ const AddChatScreen = ({ navigation }) => {
     });
   }, [navigation]);
 
-  const createChat = async () => {};
+  const createChat = async () => {
+    const todoRef = firebase.firestore().collection("chats");
+    todoRef
+      .add({ chatName: input })
+      .then(() => {
+        navigation.goBack();
+      })
+      .catch((erroe) => alert(error));
+  };
 
   return (
     <View style={styles.container}>
