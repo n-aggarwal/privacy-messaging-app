@@ -17,7 +17,7 @@ const AddChatScreen = ({ navigation }) => {
   const createChat = async () => {
     const todoRef = firebase.firestore().collection("chats");
     todoRef
-      .add({ chatName: input })
+      .add({ person_1: firebase.auth().name, person_2: input, messages: [] })
       .then(() => {
         navigation.goBack();
       })

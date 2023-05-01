@@ -4,12 +4,18 @@ import { Button, Input, Image } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
 import { v4 as uuidv4 } from "uuid";
 import { firebase } from "../firebaseConfig";
+var RSAKey = require("react-native-rsa");
+import * as SecureStore from "expo-secure-store";
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  async function save(key, value) {
+    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+  }
 
   const register = () => {
     firebase
@@ -19,6 +25,22 @@ const RegisterScreen = ({ navigation }) => {
         authUser.user.updateProfile({
           name: name,
         });
+        //Generating Public/Private Key
+        const bits = 1024;
+        const exponent = "10001"; // must be a string. This is hex string. decimal = 65537
+        var rsa = new RSAKey();
+        rsa.generate(bits, exponent);
+        const publicKey = rsa.getPublicString(); // return json encoded string
+        const privateKey = rsa.getPrivateString(); // return json encoded string
+        //Storing the info in DB
+        const todoRef = firebase.firestore().collection("Users");
+        todoRef.doc(firebase.auth().currentUser.uid).set({
+          name: name,
+          email: email,
+          publicKey: publicKey,
+          listOfRooms: [],
+        });
+        save("private-key-for-privacy-chat", privateKey);
       })
       .catch((error) => alert(error.message));
   };
