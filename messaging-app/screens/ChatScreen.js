@@ -114,7 +114,7 @@ const ChatScreen = ({ navigation, route }) => {
 
     setInput("");
   };
-
+  /*
   useLayoutEffect(() => {
     const unsubscribe = firebase
       .firestore()
@@ -133,6 +133,26 @@ const ChatScreen = ({ navigation, route }) => {
 
     return unsubscribe;
   }, [route]);
+  */
+
+  useLayoutEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .get()
+      .then((doc) =>
+        setMessages(
+          doc.data().messages.map((one_message) => ({
+            id: one_message.timestamp,
+            message: one_message.message,
+            displayName: one_message.displayName,
+          }))
+        )
+      );
+
+    return unsubscribe;
+  }, [route]);
 
   return (
     <SafeAreaView style={{ flex: 1, background: "white" }}>
@@ -145,8 +165,8 @@ const ChatScreen = ({ navigation, route }) => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <>
             <ScrollView contentContainerStyle={{ paddingTop: 15 }}>
-              {messages.map(({ id, data }) =>
-                data.email === firebase.auth().currentUser.email ? (
+              {messages.map(({ id, message, displayName }) =>
+                displayName === firebase.auth().currentUser.name ? (
                   <View key={id} style={styles.receiver}>
                     <Avatar
                       position="absolute"
@@ -164,7 +184,7 @@ const ChatScreen = ({ navigation, route }) => {
                         uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
                       }}
                     />
-                    <Text style={styles.receiverText}>{data.message}</Text>
+                    <Text style={styles.receiverText}>{message}</Text>
                   </View>
                 ) : (
                   <View key={id} style={styles.sender}>
@@ -182,8 +202,8 @@ const ChatScreen = ({ navigation, route }) => {
                         uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
                       }}
                     />
-                    <Text style={styles.senderText}>{data.message}</Text>
-                    <Text style={styles.senderName}>{data.displayName}</Text>
+                    <Text style={styles.senderText}>{message}</Text>
+                    <Text style={styles.senderName}>{displayName}</Text>
                   </View>
                 )
               )}
