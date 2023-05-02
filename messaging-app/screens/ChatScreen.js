@@ -10,12 +10,37 @@ import { TextInput } from "react-native";
 import { ScrollView } from "react-native";
 import { firebase } from "../firebaseConfig";
 import { Keyboard } from "react-native";
+import moment from "moment";
+import { get } from "firebase/database";
 
 //url needed for profile pic  "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
 
 const ChatScreen = ({ navigation, route }) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
+
+  async function getName(userId) {
+    try {
+      const doc = await firebase
+        .firestore()
+        .collection("Users")
+        .doc(userId)
+        .get();
+      if (doc.exists) {
+        const userName = doc.data().email;
+        console.log(doc.data());
+        console.log("1." + doc.data().name);
+        return doc.data().name;
+        // do something with userName
+      } else {
+        console.log("No such document!");
+        return "Fuck";
+      }
+    } catch (error) {
+      console.log("Error getting document:", error);
+      return "Fuck";
+    }
+  }
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -66,22 +91,26 @@ const ChatScreen = ({ navigation, route }) => {
     });
   }, [navigation, messages]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     Keyboard.dismiss();
+    console.log(route.params.id);
 
-    firebase
+    const currentChatRoom = firebase
       .firestore()
-      .collection("chats")
-      .doc(route.params.id)
-      .collection("messages")
-      .add({
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        message: input,
-        displayName: firebase.auth().currentUser.displayName,
-        email: firebase.auth().currentUser,
-        photoURL:
-          "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
-      });
+      .collection("ChatRooms")
+      .doc(route.params.id);
+    const now = moment();
+    const userName = await getName(firebase.auth().currentUser.uid);
+    const newMessage = {
+      timestamp: now.format("YYYY-MM-DD HH:mm:ss"),
+      message: input,
+      displayName: userName,
+      email: firebase.auth().currentUser.email,
+    };
+
+    currentChatRoom.update({
+      messages: firebase.firestore.FieldValue.arrayUnion(newMessage),
+    });
 
     setInput("");
   };
