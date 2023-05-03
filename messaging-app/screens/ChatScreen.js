@@ -12,6 +12,7 @@ import { firebase } from "../firebaseConfig";
 import { Keyboard } from "react-native";
 import moment from "moment";
 import { get } from "firebase/database";
+import { Alert } from "react-native";
 
 //url needed for profile pic  "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
 
@@ -63,14 +64,14 @@ const ChatScreen = ({ navigation, route }) => {
           <Text>{route.params.chatName}</Text>
         </View>
       ),
-      headerLeft: () => (
-        <TouchableOpacity
-          style={{ marginLeft: 10 }}
-          onPress={navigation.goBack}
-        >
-          <AntDesign name="arrowleft" size={24} color="white" />
-        </TouchableOpacity>
-      ),
+      // headerLeft: () => (
+      //   <TouchableOpacity
+      //     style={{ marginLeft: 10 }}
+      //     onPress={navigation.goBack}
+      //   >
+      //     <AntDesign name="arrowleft" size={24} color="white" />
+      //   </TouchableOpacity>
+      // ),
       headerRight: () => (
         <View
           style={{
@@ -193,6 +194,46 @@ const ChatScreen = ({ navigation, route }) => {
     fetchMessages();
   }, [route]);
 
+  const deleteMessages = (id, message, displayName) => {
+    Alert.alert(
+      "Delete Messages",
+      'If you press "Yes", all messages after the selected message, will be deleted!',
+      [
+        {
+          text: "Yes",
+          onPress: () => {
+            const docRef = firestore
+              .collection("ChatRooms")
+              .doc(route.params.id);
+
+            docRef.get().then((doc) => {
+              if (doc.exists) {
+                const data = doc.data();
+                const timestampToDelete = id; // The timestamp you want to delete from
+
+                const index = data.arrayField.findIndex((element) => {
+                  return element.timestamp === timestampToDelete;
+                });
+
+                if (index === -1) {
+                  return; // Exit if the timestamp is not found
+                }
+
+                const newArray = data.arrayField.slice(0, index);
+                docRef.update({ messages: newArray });
+              }
+            });
+          },
+        },
+        {
+          text: "No",
+          onPress: () => console.log("don't delete"),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, background: "white" }}>
       <StatusBar style="light" />
@@ -206,25 +247,33 @@ const ChatScreen = ({ navigation, route }) => {
             <ScrollView contentContainerStyle={{ paddingTop: 15 }}>
               {messages.map(({ id, message, displayName }) =>
                 displayName === firebase.auth().currentUser.name ? (
-                  <View key={id} style={styles.receiver}>
-                    <Avatar
-                      position="absolute"
-                      rounded
-                      //web
-                      containerStyle={{
-                        position: "absolute",
-                        bottom: -15,
-                        right: -5,
-                      }}
-                      bottom={-15}
-                      right={-5}
-                      size={30}
-                      source={{
-                        uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
-                      }}
-                    />
-                    <Text style={styles.receiverText}>{message}</Text>
-                  </View>
+                  <TouchableOpacity
+                    onPress={deleteMessage(id, message, displayName)}
+                  >
+                    <View
+                      key={id}
+                      onPress={deleteMessages}
+                      style={styles.receiver}
+                    >
+                      <Avatar
+                        position="absolute"
+                        rounded
+                        //web
+                        containerStyle={{
+                          position: "absolute",
+                          bottom: -15,
+                          right: -5,
+                        }}
+                        bottom={-15}
+                        right={-5}
+                        size={30}
+                        source={{
+                          uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
+                        }}
+                      />
+                      <Text style={styles.receiverText}>{message}</Text>
+                    </View>
+                  </TouchableOpacity>
                 ) : (
                   <View key={id} style={styles.sender}>
                     <Avatar
@@ -274,7 +323,7 @@ const styles = StyleSheet.create({
   },
   receiver: {
     padding: 15,
-    backgroundColor: "ECECEC",
+    backgroundColor: "#ECECEC",
     alignSelf: "flex-end",
     borderRadius: 20,
     marginRight: 15,
@@ -284,14 +333,14 @@ const styles = StyleSheet.create({
   },
   sender: {
     padding: 15,
-    backgroundColor: "2B68E6",
+    backgroundColor: "#2B68E6",
     alignSelf: "flex-start",
     borderRadius: 20,
     margin: 20,
     maxWidth: "80%",
     position: "relative",
   },
-  SenderText: {
+  senderText: {
     color: "white",
     fontWeight: "500",
     marginLeft: 10,
