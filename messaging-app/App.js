@@ -1,5 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
+import { usePreventScreenCapture } from "expo-screen-capture";
 
 // Imports for multiple pages
 import { NavigationContainer } from "@react-navigation/native";
@@ -27,6 +28,10 @@ const GlobalScreenOptions = {
 
 export default function App() {
   // Initialize Firebase
+
+  // This function denies screen capture on all pages
+  usePreventScreenCapture();
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={GlobalScreenOptions}>
