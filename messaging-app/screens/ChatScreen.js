@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import { TouchableOpacity, TouchableWithoutFeedback } from "react-native";
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "react-native-elements";
@@ -135,6 +135,24 @@ const ChatScreen = ({ navigation, route }) => {
   }, [route]);
   */
 
+  useEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .onSnapshot((doc) => {
+        const messages = doc.data().messages.map((one_message) => ({
+          id: one_message.timestamp,
+          message: one_message.message,
+          displayName: one_message.displayName,
+        }));
+        setMessages(messages);
+      });
+
+    return unsubscribe;
+  }, [route]);
+
+  /*
   useLayoutEffect(() => {
     const unsubscribe = firebase
       .firestore()
@@ -152,6 +170,27 @@ const ChatScreen = ({ navigation, route }) => {
       );
 
     return unsubscribe;
+  }, [route]);
+*/
+  useLayoutEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const doc = await firebase
+          .firestore()
+          .collection("ChatRooms")
+          .doc(route.params.id)
+          .get();
+        const messages = doc.data().messages.map((one_message) => ({
+          id: one_message.timestamp,
+          message: one_message.message,
+          displayName: one_message.displayName,
+        }));
+        setMessages(messages);
+      } catch (error) {
+        console.log("Error getting messages:", error);
+      }
+    };
+    fetchMessages();
   }, [route]);
 
   return (
