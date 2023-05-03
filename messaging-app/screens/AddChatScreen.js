@@ -125,13 +125,6 @@ const AddChatScreen = ({ navigation }) => {
       .then((querySnapshot) => {
         if (querySnapshot.empty) {
           alert("User not found");
-        } else if (
-          checkRoomExists(
-            firebase.auth().currentUser.uid,
-            querySnapshot.docs[0].ref.id
-          )
-        ) {
-          alert("Room Already Exists");
         } else {
           //do that here
           console.log("Point 1\n");
