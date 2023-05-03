@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import { TouchableOpacity, TouchableWithoutFeedback } from "react-native";
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "react-native-elements";
@@ -12,6 +12,7 @@ import { firebase } from "../firebaseConfig";
 import { Keyboard } from "react-native";
 import moment from "moment";
 import { get } from "firebase/database";
+import { Alert } from "react-native";
 
 //url needed for profile pic  "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
 
@@ -63,14 +64,14 @@ const ChatScreen = ({ navigation, route }) => {
           <Text>{route.params.chatName}</Text>
         </View>
       ),
-      headerLeft: () => (
-        <TouchableOpacity
-          style={{ marginLeft: 10 }}
-          onPress={navigation.goBack}
-        >
-          <AntDesign name="arrowleft" size={24} color="white" />
-        </TouchableOpacity>
-      ),
+      // headerLeft: () => (
+      //   <TouchableOpacity
+      //     style={{ marginLeft: 10 }}
+      //     onPress={navigation.goBack}
+      //   >
+      //     <AntDesign name="arrowleft" size={24} color="white" />
+      //   </TouchableOpacity>
+      // ),
       headerRight: () => (
         <View
           style={{
@@ -135,6 +136,24 @@ const ChatScreen = ({ navigation, route }) => {
   }, [route]);
   */
 
+  useEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .onSnapshot((doc) => {
+        const messages = doc.data().messages.map((one_message) => ({
+          id: one_message.timestamp,
+          message: one_message.message,
+          displayName: one_message.displayName,
+        }));
+        setMessages(messages);
+      });
+
+    return unsubscribe;
+  }, [route]);
+
+  /*
   useLayoutEffect(() => {
     const unsubscribe = firebase
       .firestore()
@@ -153,6 +172,76 @@ const ChatScreen = ({ navigation, route }) => {
 
     return unsubscribe;
   }, [route]);
+*/
+  useLayoutEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const doc = await firebase
+          .firestore()
+          .collection("ChatRooms")
+          .doc(route.params.id)
+          .get();
+        const messages = doc.data().messages.map((one_message) => ({
+          id: one_message.timestamp,
+          message: one_message.message,
+          displayName: one_message.displayName,
+        }));
+        setMessages(messages);
+      } catch (error) {
+        console.log("Error getting messages:", error);
+      }
+    };
+    fetchMessages();
+  }, [route]);
+
+  const deleteMessages = (id, message, displayName) => {
+    Alert.alert(
+      "Delete Messages",
+      'If you press "Yes", all messages after the selected message, will be deleted!',
+      [
+        {
+          text: "Yes",
+          onPress: () => {
+            const docRef = firebase
+              .firestore()
+              .collection("ChatRooms")
+              .doc(route.params.id);
+
+            console.log("Point 1");
+
+            docRef.get().then((doc) => {
+              if (doc.exists) {
+                const data = doc.data();
+                const timestampToDelete = id; // The timestamp you want to delete from
+
+                console.log("Point 2");
+
+                const index = data.messages.findIndex((element) => {
+                  return element.timestamp === timestampToDelete;
+                });
+
+                console.log("Point 3");
+
+                if (index === -1) {
+                  return; // Exit if the timestamp is not found
+                }
+
+                console.log("Point 4- Index: " + index);
+
+                const newArray = data.messages.slice(0, index);
+                docRef.update({ messages: newArray });
+              }
+            });
+          },
+        },
+        {
+          text: "No",
+          onPress: () => console.log("don't delete"),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, background: "white" }}>
@@ -166,12 +255,11 @@ const ChatScreen = ({ navigation, route }) => {
           <>
             <ScrollView contentContainerStyle={{ paddingTop: 15 }}>
               {messages.map(({ id, message, displayName }) =>
-                displayName === firebase.auth().currentUser.name ? (
-                  <View key={id} style={styles.receiver}>
+                displayName == firebase.auth().currentUser.name ? (
+                  <View style={styles.receiver}>
                     <Avatar
                       position="absolute"
                       rounded
-                      //web
                       containerStyle={{
                         position: "absolute",
                         bottom: -15,
@@ -202,8 +290,13 @@ const ChatScreen = ({ navigation, route }) => {
                         uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
                       }}
                     />
-                    <Text style={styles.senderText}>{message}</Text>
-                    <Text style={styles.senderName}>{displayName}</Text>
+                    <TouchableOpacity
+                      key={id}
+                      onPress={() => deleteMessages(id, message, displayName)}
+                    >
+                      <Text style={styles.senderText}>{message}</Text>
+                      <Text style={styles.senderName}>{displayName}</Text>
+                    </TouchableOpacity>
                   </View>
                 )
               )}
@@ -235,7 +328,7 @@ const styles = StyleSheet.create({
   },
   receiver: {
     padding: 15,
-    backgroundColor: "ECECEC",
+    backgroundColor: "#ECECEC",
     alignSelf: "flex-end",
     borderRadius: 20,
     marginRight: 15,
@@ -245,14 +338,14 @@ const styles = StyleSheet.create({
   },
   sender: {
     padding: 15,
-    backgroundColor: "2B68E6",
+    backgroundColor: "#2B68E6",
     alignSelf: "flex-start",
     borderRadius: 20,
     margin: 20,
     maxWidth: "80%",
     position: "relative",
   },
-  SenderText: {
+  senderText: {
     color: "white",
     fontWeight: "500",
     marginLeft: 10,
