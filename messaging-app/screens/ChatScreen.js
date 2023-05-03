@@ -202,24 +202,33 @@ const ChatScreen = ({ navigation, route }) => {
         {
           text: "Yes",
           onPress: () => {
-            const docRef = firestore
+            const docRef = firebase
+              .firestore()
               .collection("ChatRooms")
               .doc(route.params.id);
+
+            console.log("Point 1");
 
             docRef.get().then((doc) => {
               if (doc.exists) {
                 const data = doc.data();
                 const timestampToDelete = id; // The timestamp you want to delete from
 
-                const index = data.arrayField.findIndex((element) => {
+                console.log("Point 2");
+
+                const index = data.messages.findIndex((element) => {
                   return element.timestamp === timestampToDelete;
                 });
+
+                console.log("Point 3");
 
                 if (index === -1) {
                   return; // Exit if the timestamp is not found
                 }
 
-                const newArray = data.arrayField.slice(0, index);
+                console.log("Point 4- Index: " + index);
+
+                const newArray = data.messages.slice(0, index);
                 docRef.update({ messages: newArray });
               }
             });
@@ -246,34 +255,25 @@ const ChatScreen = ({ navigation, route }) => {
           <>
             <ScrollView contentContainerStyle={{ paddingTop: 15 }}>
               {messages.map(({ id, message, displayName }) =>
-                displayName === firebase.auth().currentUser.name ? (
-                  <TouchableOpacity
-                    onPress={deleteMessage(id, message, displayName)}
-                  >
-                    <View
-                      key={id}
-                      onPress={deleteMessages}
-                      style={styles.receiver}
-                    >
-                      <Avatar
-                        position="absolute"
-                        rounded
-                        //web
-                        containerStyle={{
-                          position: "absolute",
-                          bottom: -15,
-                          right: -5,
-                        }}
-                        bottom={-15}
-                        right={-5}
-                        size={30}
-                        source={{
-                          uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
-                        }}
-                      />
-                      <Text style={styles.receiverText}>{message}</Text>
-                    </View>
-                  </TouchableOpacity>
+                displayName == firebase.auth().currentUser.name ? (
+                  <View style={styles.receiver}>
+                    <Avatar
+                      position="absolute"
+                      rounded
+                      containerStyle={{
+                        position: "absolute",
+                        bottom: -15,
+                        right: -5,
+                      }}
+                      bottom={-15}
+                      right={-5}
+                      size={30}
+                      source={{
+                        uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
+                      }}
+                    />
+                    <Text style={styles.receiverText}>{message}</Text>
+                  </View>
                 ) : (
                   <View key={id} style={styles.sender}>
                     <Avatar
@@ -290,8 +290,13 @@ const ChatScreen = ({ navigation, route }) => {
                         uri: "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
                       }}
                     />
-                    <Text style={styles.senderText}>{message}</Text>
-                    <Text style={styles.senderName}>{displayName}</Text>
+                    <TouchableOpacity
+                      key={id}
+                      onPress={() => deleteMessages(id, message, displayName)}
+                    >
+                      <Text style={styles.senderText}>{message}</Text>
+                      <Text style={styles.senderName}>{displayName}</Text>
+                    </TouchableOpacity>
                   </View>
                 )
               )}
