@@ -15,9 +15,6 @@ const CustomListItem = ({ id, chatName, enterChat }) => {
         <ListItem.Title style={{ fontWeight: "800" }}>
           {chatName}
         </ListItem.Title>
-        <ListItem.Subtitle numberOfLines={1} ellipsizeMode="tail">
-          Message from your pal that is looooooooooooooooooong
-        </ListItem.Subtitle>
       </ListItem.Content>
     </ListItem>
   );

@@ -2,6 +2,28 @@
 
 This repository contains the code for the final project developed for COMP360: Information Security and Privacy.
 
+## Overview
+
+The privacy messaging app is developeed using expo go, on the react-native platform. It is meant to increase security, and privacy
+of the users and allow them to communicate with friends, family, and others without any worries! Right now, the app is under development and all the features have not been implemented. As such, please keep in mind that there will be bugs; feel free to open an issue if you find one!
+
+## Features
+
+This app contains many features. The most important ones are listed below:
+
+- Anti-Screenshot Functionality (Android Only)
+- Sequence Message deletion
+- Password Security (client + server)
+- End-to-End Encryption (in progress)
+- API Security (in progess)
+
+## Additional Concepts Explored
+
+The following are some ideas that we explored, but weren't able to implement becasuse of various reasons including lack of time and rescoures. A Proof of Concept for each of these will be included soon:
+
+- Anti-Screenshot Functionality (IOS)
+- Blocking photos of screen from other phone
+
 # Setting up the Enviornment
 
 First you would need to download npm on your machine. On Mac the easiest way to do so would be using Homebrew.
@@ -10,14 +32,7 @@ First you would need to download npm on your machine. On Mac the easiest way to 
 brew install node
 ```
 
-Once you have downloaded npm. Run the following command in the local clone of your git repository.
-
-```bash
-npm install
-```
-
-Finally, to run your app you will need to download the Expo Go app from the Play store (Android) or the App Store (IPhone).
-Now you are ready to start building the app!
+Once you have downloaded node, to run your app you will need to download the Expo Go app from the Play store (Android) or the App Store (IPhone). Now your enviornment should be all set!
 
 # Getting Started
 
@@ -25,26 +40,11 @@ To run the app. Run the following commands in your local git clone:
 
 ```bash
 cd messaging-app
+npm install
 npx expo start
 ```
 
-This will start the server. You should see a QR code on your terminal. Scan the QR code with the Expo Go app and the app you are buildng will be displayed on phone!
-
-# Just run these...
-
-```bash
-npm install firebase
-sudo npm install -g firebase-tools
-npm install @react-navigation/native
-npx expo install react-native-screens react-native-safe-area-context
-npm install @react-navigation/native-stack
-npm install react-native-elements
-npm install --save @react-native-google-signin/google-signin firebase
-npm install --save @react-native-firebase/app
-npx expo install firebase
-npm install uuid
-npm install @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore
-```
+This will start the server. You should see a QR code on your terminal. Scan the QR code with the Expo Go app (Android) or camera (IOS) and the app you are buildng will be displayed on phone! Alternatively, you can use the Android Emulator (requires android studio), IOS simulator, or open the app on the web.
 
 # Rescources
 
