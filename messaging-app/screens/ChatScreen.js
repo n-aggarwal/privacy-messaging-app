@@ -29,31 +29,23 @@ const ChatScreen = ({ navigation, route }) => {
   }
 
   async function getValueFor(key) {
-    console.log("Getting value for key:", key);
     let result = await SecureStore.getItemAsync(key);
-    //console.log("Got result:", result);
     return result;
   }
 
   async function get_aes_key(room_id) {
-    console.log("Ponitt 1\n");
     const aes_key = await getValueFor(room_id);
-    console.log("pintt 1.11\n");
 
     if (aes_key) {
-      console.log("pintt 1.122\n");
       return aes_key;
     } else {
       //get it from the database and decrypt it
       try {
-        console.log("pintt 1.2\n");
         const doc = await firebase
           .firestore()
           .collection("ChatRooms")
           .doc(room_id)
           .get();
-
-        console.log("pintt 1.3\n");
 
         const encrypted_key = doc.data().AESkey;
 
@@ -61,13 +53,9 @@ const ChatScreen = ({ navigation, route }) => {
           throw new Error("No AES key found for room " + room_id);
         }
 
-        console.log("pintt 1.4\n");
-
         const private_key_json = await getValueFor(
           firebase.auth().currentUser.uid
         );
-
-        console.log("pintt 1.5\n");
 
         if (!private_key_json) {
           throw new Error(
@@ -75,8 +63,6 @@ const ChatScreen = ({ navigation, route }) => {
               firebase.auth().currentUser.uid
           );
         }
-
-        console.log("Pointt 2");
 
         const private_key = JSON.parse(private_key_json);
         const rsa = new RSAKey();
@@ -94,15 +80,11 @@ const ChatScreen = ({ navigation, route }) => {
         console;
         const aes_key = rsa.decrypt(encrypted_key);
 
-        console.log("Pointt 3");
-
         if (!aes_key) {
           throw new Error("Failed to decrypt AES key for room " + room_id);
         }
 
         await save(room_id, aes_key);
-
-        console.log("Decrypted AES key for room !");
 
         return aes_key;
       } catch (error) {
@@ -119,18 +101,11 @@ const ChatScreen = ({ navigation, route }) => {
     };
 
     const aes_key = await get_aes_key(room_id);
-    console.log("pintt 10\n");
 
     const aes_key_wordarray = CryptoES.enc.Utf8.parse(aes_key);
-    console.log("pintt 11\n");
-
-    console.log("message:", message);
-    console.log("aes_key_wordarray:", aes_key_wordarray);
 
     try {
       const encrypted_message = CryptoES.AES.encrypt(message, aes_key);
-      console.log("pintt 12\n");
-      console.log(encrypted_message);
 
       return encrypted_message;
     } catch (error) {
@@ -141,20 +116,13 @@ const ChatScreen = ({ navigation, route }) => {
   }
 
   async function decrypt_message(str_message, room_id) {
-    console.log("2.11\n");
     const aes_key = await get_aes_key(room_id);
-    console.log("2.12\n");
 
     const aes_key_wordarray = CryptoES.enc.Utf8.parse(aes_key);
-    console.log("2.13\n");
 
     const message = JSON.parse(str_message);
-    console.log("2.14\n");
-    console.log(message + "\n");
-    console.log(str_message + "\n");
-    console.log(aes_key + "\n");
+
     const decrypted_message = CryptoES.AES.decrypt(message, aes_key);
-    console.log("2.15\n");
     console.log(decrypted_message.toString(CryptoES.enc.Utf8));
     return decrypted_message.toString(CryptoES.enc.Utf8);
   }
@@ -168,16 +136,12 @@ const ChatScreen = ({ navigation, route }) => {
         .get();
       if (doc.exists) {
         const userName = doc.data().email;
-        console.log(doc.data());
-        console.log("1." + doc.data().name);
         return doc.data().name;
         // do something with userName
       } else {
-        console.log("No such document!");
         return "Fuck";
       }
     } catch (error) {
-      console.log("Error getting document:", error);
       return "Fuck";
     }
   }
@@ -225,7 +189,6 @@ const ChatScreen = ({ navigation, route }) => {
 
   const sendMessage = async () => {
     Keyboard.dismiss();
-    console.log(route.params.id);
 
     const currentChatRoom = firebase
       .firestore()
@@ -233,7 +196,6 @@ const ChatScreen = ({ navigation, route }) => {
       .doc(route.params.id);
     const now = moment();
     const encrypted_message = await encrypt_message(input, route.params.id);
-    console.log("Point 13");
     const userName = await getName(firebase.auth().currentUser.uid);
     const newMessage = {
       timestamp: now.format("YYYY-MM-DD HH:mm:ss"),
@@ -248,7 +210,7 @@ const ChatScreen = ({ navigation, route }) => {
 
     setInput("");
   };
-
+  /*
   useEffect(() => {
     const unsubscribe = firebase
       .firestore()
@@ -271,7 +233,59 @@ const ChatScreen = ({ navigation, route }) => {
 
     return unsubscribe;
   }, [route]);
+  */
+  /*
+  useEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .onSnapshot((doc) => {
+        const messages = doc.data().messages.map((one_message) => {
+          const decrypted_message = await decrypt_message(
+            one_message.message,
+            route.params.id
+          );
+          return {
+            id: one_message.timestamp,
+            message: decrypted_message,
+            displayName: one_message.displayName,
+          };
+        });
+        console.log(messages); // Add this line to log the messages array
+        setMessages(messages);
+      });
 
+    return unsubscribe;
+  }, [route]);
+*/
+  useEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .onSnapshot((doc) => {
+        const messages = doc.data().messages.map(async (one_message) => {
+          const decrypted_message = await decrypt_message(
+            one_message.message,
+            route.params.id
+          );
+          return {
+            id: one_message.timestamp,
+            message: decrypted_message,
+            displayName: one_message.displayName,
+          };
+        });
+
+        Promise.all(messages).then((messages) => {
+          setMessages(messages);
+        });
+      });
+
+    return unsubscribe;
+  }, [route]);
+
+  /*
   useLayoutEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -298,6 +312,36 @@ const ChatScreen = ({ navigation, route }) => {
     };
     fetchMessages();
   }, [route]);
+*/
+  useLayoutEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const doc = await firebase
+          .firestore()
+          .collection("ChatRooms")
+          .doc(route.params.id)
+          .get();
+        const messages = doc.data().messages;
+        const decryptedMessages = await Promise.all(
+          messages.map(async (one_message) => {
+            const decrypted_message = await decrypt_message(
+              one_message.message,
+              route.params.id
+            );
+            return {
+              id: one_message.timestamp.toString(),
+              message: decrypted_message,
+              displayName: one_message.displayName,
+            };
+          })
+        );
+        setMessages(decryptedMessages);
+      } catch (error) {
+        console.log("Error getting messages:", error);
+      }
+    };
+    fetchMessages();
+  }, [route]);
 
   const deleteMessages = (id, message, displayName) => {
     Alert.alert(
@@ -312,26 +356,18 @@ const ChatScreen = ({ navigation, route }) => {
               .collection("ChatRooms")
               .doc(route.params.id);
 
-            console.log("Point 1");
-
             docRef.get().then((doc) => {
               if (doc.exists) {
                 const data = doc.data();
                 const timestampToDelete = id; // The timestamp you want to delete from
 
-                console.log("Point 2");
-
                 const index = data.messages.findIndex((element) => {
                   return element.timestamp === timestampToDelete;
                 });
 
-                console.log("Point 3");
-
                 if (index === -1) {
                   return; // Exit if the timestamp is not found
                 }
-
-                console.log("Point 4- Index: " + index);
 
                 const newArray = data.messages.slice(0, index);
                 docRef.update({ messages: newArray });
