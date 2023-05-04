@@ -42,10 +42,7 @@ const AddChatScreen = ({ navigation }) => {
         return;
       }
 
-      // Save the AES key to the database
-      // await firebase.firestore().collection("ChatRooms").doc(room_id).update({
-      //   AESkey: key,
-      // });
+      await save(room_id, key);
 
       // Get the other person's public key from the database
       const otherPersonSnapshot = await firebase
