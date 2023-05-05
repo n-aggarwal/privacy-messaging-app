@@ -7,6 +7,9 @@ This repository contains the code for the final project developed for COMP360: I
 The privacy messaging app is developeed using expo go, on the react-native platform. It is meant to increase security, and privacy
 of the users and allow them to communicate with friends, family, and others without any worries! Right now, the app is under development and all the features have not been implemented. As such, please keep in mind that there will be bugs; feel free to open an issue if you find one!
 
+The app is deployed (Android Version)! [privacy-messaging-app](https://expo.dev/@nishant-aggarwal/messaging-app?serviceType=classic&distribution=expo-go); to run this you would need to download the expo go app on your phone from Play Store and then 
+scan the QR code on website using the app or your phone camera. Hope you enjoy it!
+
 ## Features
 
 This app contains many features. The most important ones are listed below:
