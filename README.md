@@ -10,6 +10,8 @@ of the users and allow them to communicate with friends, family, and others with
 The app is deployed (Android Version)! [privacy-messaging-app](https://expo.dev/@nishant-aggarwal/messaging-app?serviceType=classic&distribution=expo-go); to run this you would need to download the expo go app on your phone from Play Store and then 
 scan the QR code on website using the app or your phone camera. Hope you enjoy it!
 
+Additionally, we developed a [presentation](https://docs.google.com/presentation/d/1PkJLAopBvjOEjUAWPg7yRgU5Mszu3NIFK7UC6lcQgLY/edit#slide=id.g23f5c5068e8_0_0) to show all the features! Feel free to take a look and reach out if you have any questions!
+
 ## Features
 
 This app contains many features. The most important ones are listed below:
