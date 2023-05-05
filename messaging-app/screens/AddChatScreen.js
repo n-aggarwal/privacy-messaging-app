@@ -3,7 +3,9 @@ import React, { useLayoutEffect, useState } from "react";
 import { Button, Input } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { firebase } from "../firebaseConfig";
-import { query } from "firebase/database";
+import * as Crypto from "expo-crypto";
+var RSAKey = require("react-native-rsa");
+import * as SecureStore from "expo-secure-store";
 
 const AddChatScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
@@ -14,94 +16,76 @@ const AddChatScreen = ({ navigation }) => {
       headerBackTitle: "Chats",
     });
   }, [navigation]);
-  /*
-  const createChat = async () => {
-    const todoRef = firebase.firestore().collection("ChatRooms");
-    firebase
-      .firestore()
-      .collection("Users")
-      .where("email", "==", input)
-      .get()
-      .then((querySnapshot) => {
-        if (querySnapshot.empty) {
-          alert("User not found");
-        } else {
-          console.log("Point 1\n");
-          console.log(querySnapshot.docs[0].ref.id + "\n");
-          console.log(firebase.auth().currentUser.uid);
 
-          chatRoomId = todoRef.add({
-            person_1: firebase.auth().currentUser.uid,
-            person_2: querySnapshot.docs[0].ref.id,
-            messages: [],
-          });
-          console.log("Point 2");
+  async function save(key, value) {
+    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+  }
 
-          firebase
-            .firestore()
-            .collection("Users")
-            .doc(firebase.auth().currentUser.uid)
-            .get()
-            .then((doc) => {
-              if (doc.exists) {
-                doc.update({
-                  listOfRooms:
-                    firebase.firestore.FieldValue.arrayUnion(chatRoomId),
-                });
-              } else {
-                console.log("Could not update your chatRoom List!");
-              }
-            });
-          console.log("Point 3");
-
-          firebase
-            .firestore()
-            .collection("Users")
-            .doc(querySnapshot.docs[0].ref.id)
-            .update({
-              listOfRooms:
-                firebase.firestore.FieldValue.arrayUnion("new message data"),
-            });
-          console.log("Point 4");
-        }
-      })
-      .then(() => navigation.goBack())
-      /*
-    todoRef
-      .add({ person_1: firebase.auth().name, person_2: input, messages: [] })
-      .then(() => {
-        firebase
-          .firestore()
-          .collection("Users")
-          .where("email", "==", firebase.auth().name)
-          .get()
-          .then((querySnapshot) => {
-            if (querySnapshot.empty) {
-              console.log("No matching documents");
-              return;
-            }
-
-            // Update the messages field of the first matching document
-            const userDocRef = querySnapshot.docs[0].ref;
-            const roomId = userDocRef
-              .update({
-                listOfRooms: ["New message"],
-              })
-              .then(() => {
-                console.log("Messages field updated");
-              })
-              .catch((error) => {
-                console.error("Error updating messages field:", error);
-              });
-          })
-          .catch((error) => {
-            console.error("Error getting documents:", error);
-          });
-        navigation.goBack();
-      })*/ /*
-      .catch((error) => alert(error));
+  const generateRandomKey = async () => {
+    const key = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      Math.random().toString()
+    );
+    console.log(key);
+    return key;
   };
-  */
+
+  // Import the necessary libraries
+
+  async function create_AES_key(room_id, otherPersonId) {
+    try {
+      // Generate a random AES key
+      const key = await generateRandomKey();
+
+      if (!key) {
+        console.log("Failed to generate a random key");
+        return;
+      }
+
+      await save(room_id, key);
+
+      // Get the other person's public key from the database
+      const otherPersonSnapshot = await firebase
+        .firestore()
+        .collection("Users")
+        .doc(otherPersonId)
+        .get();
+
+      if (!otherPersonSnapshot.exists) {
+        throw new Error("Other person's public key not found");
+      }
+
+      const otherPersonKey = JSON.parse(otherPersonSnapshot.data().publicKey);
+      const otherPersonKeyN = otherPersonKey.n;
+      const otherPersonKeyE = otherPersonKey.e;
+
+      console.log(otherPersonKey + "\n");
+      console.log(otherPersonKeyN + "\n");
+      console.log(otherPersonKeyE + "\n");
+
+      // Use the other person's public key to encrypt the AES key
+      const rsa = new RSAKey();
+      rsa.setPublic(otherPersonKeyN, otherPersonKeyE);
+      const key_encrypted = rsa.encrypt(key);
+
+      console.log(
+        "Other person's public key is: (n): " +
+          otherPersonKeyN +
+          ", (e): " +
+          otherPersonKeyE
+      );
+      console.log("The AESKey is: " + key);
+
+      // Update the database with the encrypted AES key
+      await firebase.firestore().collection("ChatRooms").doc(room_id).update({
+        AESkey: key_encrypted,
+      });
+    } catch (error) {
+      console.error("Failed to create AES key", error);
+      // Handle the error here, such as showing an error message to the user
+    }
+  }
+
   //make it so that there cannot be duplicate rooms
   const checkRoomExists = async (person1, person2) => {
     const querySnapshot = await firebase
@@ -141,6 +125,8 @@ const AddChatScreen = ({ navigation }) => {
             const chatRoomId = docRef.id;
 
             console.log("New chat room created with id:", chatRoomId);
+
+            create_AES_key(chatRoomId, querySnapshot.docs[0].ref.id);
 
             // Update the user document for the current user
             firebase

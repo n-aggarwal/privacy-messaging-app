@@ -48,7 +48,7 @@ const RegisterScreen = ({ navigation }) => {
             publicKey: publicKey,
             listOfRooms: [],
           });
-          save("private-key-for-privacy-chat", privateKey);
+          save(firebase.auth().currentUser.uid, privateKey);
         })
         .catch((error) => alert(error.message));
     } else {

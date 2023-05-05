@@ -2,7 +2,7 @@ import React, { useState, useLayoutEffect, useEffect } from "react";
 import { TouchableOpacity, TouchableWithoutFeedback } from "react-native";
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "react-native-elements";
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import { Platform } from "react-native";
@@ -11,14 +11,121 @@ import { ScrollView } from "react-native";
 import { firebase } from "../firebaseConfig";
 import { Keyboard } from "react-native";
 import moment from "moment";
-import { get } from "firebase/database";
+import * as Crypto from "expo-crypto";
+import * as SecureStore from "expo-secure-store";
+var RSAKey = require("react-native-rsa");
 import { Alert } from "react-native";
+import CryptoES from "crypto-es";
+import { AES } from "crypto-js";
 
 //url needed for profile pic  "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
 
 const ChatScreen = ({ navigation, route }) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
+
+  async function save(key, value) {
+    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+  }
+
+  async function getValueFor(key) {
+    let result = await SecureStore.getItemAsync(key);
+    return result;
+  }
+
+  async function get_aes_key(room_id) {
+    const aes_key = await getValueFor(room_id);
+
+    if (aes_key) {
+      return aes_key;
+    } else {
+      //get it from the database and decrypt it
+      try {
+        const doc = await firebase
+          .firestore()
+          .collection("ChatRooms")
+          .doc(room_id)
+          .get();
+
+        const encrypted_key = doc.data().AESkey;
+
+        if (!encrypted_key) {
+          throw new Error("No AES key found for room " + room_id);
+        }
+
+        const private_key_json = await getValueFor(
+          firebase.auth().currentUser.uid
+        );
+
+        if (!private_key_json) {
+          throw new Error(
+            "No RSA private key found for user " +
+              firebase.auth().currentUser.uid
+          );
+        }
+
+        const private_key = JSON.parse(private_key_json);
+        const rsa = new RSAKey();
+        rsa.setPrivateEx(
+          private_key.n,
+          private_key.e,
+          private_key.d,
+          private_key.p,
+          private_key.q,
+          private_key.dmp1,
+          private_key.dmq1,
+          private_key.coeff
+        );
+
+        console;
+        const aes_key = rsa.decrypt(encrypted_key);
+
+        if (!aes_key) {
+          throw new Error("Failed to decrypt AES key for room " + room_id);
+        }
+
+        await save(room_id, aes_key);
+
+        return aes_key;
+      } catch (error) {
+        console.error("Failed to decrypt AES key", error);
+        // Handle the error here, such as showing an error message to the user
+      }
+    }
+  }
+
+  async function encrypt_message(message, room_id) {
+    CryptoES.enc.Utf8 = {
+      stringify: CryptoES.enc.Utf8.stringify,
+      parse: CryptoES.enc.Utf8.parse,
+    };
+
+    const aes_key = await get_aes_key(room_id);
+
+    const aes_key_wordarray = CryptoES.enc.Utf8.parse(aes_key);
+
+    try {
+      const encrypted_message = CryptoES.AES.encrypt(message, aes_key);
+
+      return encrypted_message;
+    } catch (error) {
+      console.error("Failed to encrypt message:", error);
+      const ciphertext = AES.encrypt(message, aes_key).toString();
+      return ciphertext;
+    }
+  }
+
+  async function decrypt_message(str_message, room_id) {
+    const aes_key = await get_aes_key(room_id);
+
+    const aes_key_wordarray = CryptoES.enc.Utf8.parse(aes_key);
+
+    const message = JSON.parse(str_message);
+
+    const decrypted_message = CryptoES.AES.decrypt(message, aes_key);
+    console.log(decrypted_message.toString(CryptoES.enc.Utf8));
+    return decrypted_message.toString(CryptoES.enc.Utf8);
+  }
 
   async function getName(userId) {
     try {
@@ -29,16 +136,12 @@ const ChatScreen = ({ navigation, route }) => {
         .get();
       if (doc.exists) {
         const userName = doc.data().email;
-        console.log(doc.data());
-        console.log("1." + doc.data().name);
         return doc.data().name;
         // do something with userName
       } else {
-        console.log("No such document!");
         return "Fuck";
       }
     } catch (error) {
-      console.log("Error getting document:", error);
       return "Fuck";
     }
   }
@@ -64,14 +167,6 @@ const ChatScreen = ({ navigation, route }) => {
           <Text>{route.params.chatName}</Text>
         </View>
       ),
-      // headerLeft: () => (
-      //   <TouchableOpacity
-      //     style={{ marginLeft: 10 }}
-      //     onPress={navigation.goBack}
-      //   >
-      //     <AntDesign name="arrowleft" size={24} color="white" />
-      //   </TouchableOpacity>
-      // ),
       headerRight: () => (
         <View
           style={{
@@ -94,17 +189,17 @@ const ChatScreen = ({ navigation, route }) => {
 
   const sendMessage = async () => {
     Keyboard.dismiss();
-    console.log(route.params.id);
 
     const currentChatRoom = firebase
       .firestore()
       .collection("ChatRooms")
       .doc(route.params.id);
     const now = moment();
+    const encrypted_message = await encrypt_message(input, route.params.id);
     const userName = await getName(firebase.auth().currentUser.uid);
     const newMessage = {
       timestamp: now.format("YYYY-MM-DD HH:mm:ss"),
-      message: input,
+      message: JSON.stringify(encrypted_message),
       displayName: userName,
       email: firebase.auth().currentUser.email,
     };
@@ -116,38 +211,75 @@ const ChatScreen = ({ navigation, route }) => {
     setInput("");
   };
   /*
-  useLayoutEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection("chats")
-      .doc(route.params.id)
-      .collection("messages")
-      .orderBy("timestamp", "desc")
-      .onSnapshot((snapshot) =>
-        setMessages(
-          snapshot.docs.map((doc) => ({
-            id: doc.id,
-            data: doc.data(),
-          }))
-        )
-      );
-
-    return unsubscribe;
-  }, [route]);
-  */
-
   useEffect(() => {
     const unsubscribe = firebase
       .firestore()
       .collection("ChatRooms")
       .doc(route.params.id)
       .onSnapshot((doc) => {
-        const messages = doc.data().messages.map((one_message) => ({
-          id: one_message.timestamp,
-          message: one_message.message,
-          displayName: one_message.displayName,
-        }));
+        const messages = doc.data().messages.map((one_message) => {
+          const decrypted_message = decrypt_message(
+            one_message.message,
+            route.params.id
+          );
+          return {
+            id: one_message.timestamp,
+            message: decrypted_message,
+            displayName: one_message.displayName,
+          };
+        });
         setMessages(messages);
+      });
+
+    return unsubscribe;
+  }, [route]);
+  */
+  /*
+  useEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .onSnapshot((doc) => {
+        const messages = doc.data().messages.map((one_message) => {
+          const decrypted_message = await decrypt_message(
+            one_message.message,
+            route.params.id
+          );
+          return {
+            id: one_message.timestamp,
+            message: decrypted_message,
+            displayName: one_message.displayName,
+          };
+        });
+        console.log(messages); // Add this line to log the messages array
+        setMessages(messages);
+      });
+
+    return unsubscribe;
+  }, [route]);
+*/
+  useEffect(() => {
+    const unsubscribe = firebase
+      .firestore()
+      .collection("ChatRooms")
+      .doc(route.params.id)
+      .onSnapshot((doc) => {
+        const messages = doc.data().messages.map(async (one_message) => {
+          const decrypted_message = await decrypt_message(
+            one_message.message,
+            route.params.id
+          );
+          return {
+            id: one_message.timestamp,
+            message: decrypted_message,
+            displayName: one_message.displayName,
+          };
+        });
+
+        Promise.all(messages).then((messages) => {
+          setMessages(messages);
+        });
       });
 
     return unsubscribe;
@@ -155,22 +287,30 @@ const ChatScreen = ({ navigation, route }) => {
 
   /*
   useLayoutEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection("ChatRooms")
-      .doc(route.params.id)
-      .get()
-      .then((doc) =>
-        setMessages(
-          doc.data().messages.map((one_message) => ({
+    const fetchMessages = async () => {
+      try {
+        const doc = await firebase
+          .firestore()
+          .collection("ChatRooms")
+          .doc(route.params.id)
+          .get();
+        const messages = doc.data().messages.map((one_message) => {
+          const decrypted_message = decrypt_message(
+            one_message.message,
+            route.params.id
+          );
+          return {
             id: one_message.timestamp,
-            message: one_message.message,
+            message: decrypted_message,
             displayName: one_message.displayName,
-          }))
-        )
-      );
-
-    return unsubscribe;
+          };
+        });
+        setMessages(messages);
+      } catch (error) {
+        console.log("Error getting messages:", error);
+      }
+    };
+    fetchMessages();
   }, [route]);
 */
   useLayoutEffect(() => {
@@ -181,12 +321,21 @@ const ChatScreen = ({ navigation, route }) => {
           .collection("ChatRooms")
           .doc(route.params.id)
           .get();
-        const messages = doc.data().messages.map((one_message) => ({
-          id: one_message.timestamp,
-          message: one_message.message,
-          displayName: one_message.displayName,
-        }));
-        setMessages(messages);
+        const messages = doc.data().messages;
+        const decryptedMessages = await Promise.all(
+          messages.map(async (one_message) => {
+            const decrypted_message = await decrypt_message(
+              one_message.message,
+              route.params.id
+            );
+            return {
+              id: one_message.timestamp.toString(),
+              message: decrypted_message,
+              displayName: one_message.displayName,
+            };
+          })
+        );
+        setMessages(decryptedMessages);
       } catch (error) {
         console.log("Error getting messages:", error);
       }
@@ -207,26 +356,18 @@ const ChatScreen = ({ navigation, route }) => {
               .collection("ChatRooms")
               .doc(route.params.id);
 
-            console.log("Point 1");
-
             docRef.get().then((doc) => {
               if (doc.exists) {
                 const data = doc.data();
                 const timestampToDelete = id; // The timestamp you want to delete from
 
-                console.log("Point 2");
-
                 const index = data.messages.findIndex((element) => {
                   return element.timestamp === timestampToDelete;
                 });
 
-                console.log("Point 3");
-
                 if (index === -1) {
                   return; // Exit if the timestamp is not found
                 }
-
-                console.log("Point 4- Index: " + index);
 
                 const newArray = data.messages.slice(0, index);
                 docRef.update({ messages: newArray });
