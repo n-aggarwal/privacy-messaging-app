@@ -24,80 +24,6 @@ const HomeScreen = ({ navigation }) => {
         navigation.replace("Login");
       });
   };
-  /*
-  useEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection("Users")
-      .doc(firebase.auth().currentUser.uid)
-      .get()
-      .then((doc) => {
-        if (doc.exists) {
-          setChats(
-            doc.data().listOfRooms.map((roomId) => {
-              firebase
-                .firestore()
-                .collection("ChatRooms")
-                .doc(roomId)
-                .get()
-                .then((doc) => {
-                  if (doc.exists) {
-                    const data = doc.data();
-                    if (firebase.auth().currentUser.uid === data.person_1) {
-                      return { id: roomId, data: data.person_2 };
-                    } else {
-                      return { id: roomId, data: data.person_1 };
-                    }
-                    // access other fields as needed
-                  } else {
-                    console.log("Fatal Error");
-                    return { id: "NULL", data: "NULL" };
-                  }
-                })
-                .catch((error) => {
-                  console.log("Fatal Error getting document:", error);
-                  return { id: "NULL2", data: "NULL2" };
-                });
-            })
-          );
-        } else {
-          alert("No such document!");
-        }
-      })
-      .catch((error) => {
-        alert("Error getting document:", error);
-      });
-
-    return () => {
-      unsubscribe;
-    };
-  }, []);
-*/
-  /*
- async function getName(userId) {
-    firebase
-      .firestore()
-      .collection("Users")
-      .doc(userId)
-      .get()
-      .then((doc) => {
-        if (doc.exists) {
-          const userName = doc.data().email;
-          console.log(doc.data());
-          console.log("1." + doc.data().name);
-          return doc.data().name;
-          // do something with userName
-        } else {
-          console.log("No such document!");
-          return "Fuck";
-        }
-      })
-      .catch((error) => {
-        console.log("Error getting document:", error);
-        return "Fuck";
-      });
-  }
-*/
 
   async function getName(userId) {
     try {
@@ -108,17 +34,15 @@ const HomeScreen = ({ navigation }) => {
         .get();
       if (doc.exists) {
         const userName = doc.data().email;
-        console.log(doc.data());
-        console.log("1." + doc.data().name);
         return doc.data().name;
         // do something with userName
       } else {
         console.log("No such document!");
-        return "Fuck";
+        return "Error";
       }
     } catch (error) {
       console.log("Error getting document:", error);
-      return "Fuck";
+      return "Error";
     }
   }
 
@@ -142,7 +66,6 @@ const HomeScreen = ({ navigation }) => {
                     ? data.person_2
                     : data.person_1;
                 const otherPersonName = await getName(otherPersonId);
-                console.log(String(otherPersonName));
                 return {
                   id: roomId,
                   data: { chatName: String(otherPersonName) },
@@ -208,23 +131,7 @@ const HomeScreen = ({ navigation }) => {
   const enterChat = (id, chatname) => {
     navigation.navigate("Chat", { id, chatname });
   };
-  /*
-  return (
-    <SafeAreaView>
-      <ScrollView style={styles.container}>
-        {chats.map(({ id, data: { chatName } }) => (
-          <CustomListItem
-            key={id}
-            id={id}
-            chatName={chatName}
-            enterChat={enterChat}
-          />
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
-*/
+
   return (
     <SafeAreaView>
       <ScrollView style={styles.container}>
@@ -259,14 +166,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-
-/*
-      .onSnapshot((snapshot) => {
-        setChats(
-          snapshot.docs.map((doc) => ({
-            id: doc.id,
-            data: doc.data(),
-          }))
-        );
-      });
-*/

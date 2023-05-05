@@ -26,7 +26,6 @@ const AddChatScreen = ({ navigation }) => {
       Crypto.CryptoDigestAlgorithm.SHA256,
       Math.random().toString()
     );
-    console.log(key);
     return key;
   };
 
@@ -59,22 +58,10 @@ const AddChatScreen = ({ navigation }) => {
       const otherPersonKeyN = otherPersonKey.n;
       const otherPersonKeyE = otherPersonKey.e;
 
-      console.log(otherPersonKey + "\n");
-      console.log(otherPersonKeyN + "\n");
-      console.log(otherPersonKeyE + "\n");
-
       // Use the other person's public key to encrypt the AES key
       const rsa = new RSAKey();
       rsa.setPublic(otherPersonKeyN, otherPersonKeyE);
       const key_encrypted = rsa.encrypt(key);
-
-      console.log(
-        "Other person's public key is: (n): " +
-          otherPersonKeyN +
-          ", (e): " +
-          otherPersonKeyE
-      );
-      console.log("The AESKey is: " + key);
 
       // Update the database with the encrypted AES key
       await firebase.firestore().collection("ChatRooms").doc(room_id).update({
@@ -85,18 +72,6 @@ const AddChatScreen = ({ navigation }) => {
       // Handle the error here, such as showing an error message to the user
     }
   }
-
-  //make it so that there cannot be duplicate rooms
-  const checkRoomExists = async (person1, person2) => {
-    const querySnapshot = await firebase
-      .firestore()
-      .collection("ChatRooms")
-      .where("person_1", "in", [person1, person2])
-      .where("person_2", "in", [person1, person2])
-      .get();
-
-    return !querySnapshot.empty;
-  };
 
   const createChat = async () => {
     const todoRef = firebase.firestore().collection("ChatRooms");
@@ -110,11 +85,6 @@ const AddChatScreen = ({ navigation }) => {
         if (querySnapshot.empty) {
           alert("User not found");
         } else {
-          //do that here
-          console.log("Point 1\n");
-          console.log(querySnapshot.docs[0].ref.id + "\n");
-          console.log(firebase.auth().currentUser.uid);
-
           // Create a new chat room document and get its id
           const newChatRoom = {
             person_1: firebase.auth().currentUser.uid,
@@ -123,8 +93,6 @@ const AddChatScreen = ({ navigation }) => {
           };
           return todoRef.add(newChatRoom).then((docRef) => {
             const chatRoomId = docRef.id;
-
-            console.log("New chat room created with id:", chatRoomId);
 
             create_AES_key(chatRoomId, querySnapshot.docs[0].ref.id);
 
@@ -138,10 +106,7 @@ const AddChatScreen = ({ navigation }) => {
                   firebase.firestore.FieldValue.arrayUnion(chatRoomId),
               })
               .then(() => {
-                console.log(
-                  "Current user document updated with chatRoomId:",
-                  chatRoomId
-                );
+                console.log("Ok");
               })
               .catch((error) => {
                 console.error("Error updating current user document:", error);
@@ -157,10 +122,7 @@ const AddChatScreen = ({ navigation }) => {
                   firebase.firestore.FieldValue.arrayUnion(chatRoomId),
               })
               .then(() => {
-                console.log(
-                  "Other user document updated with chatRoomId:",
-                  chatRoomId
-                );
+                console.log("ChatRoom Created!");
               })
               .catch((error) => {
                 console.error("Error updating other user document:", error);
