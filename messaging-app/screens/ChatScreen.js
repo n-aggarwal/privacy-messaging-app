@@ -123,7 +123,6 @@ const ChatScreen = ({ navigation, route }) => {
     const message = JSON.parse(str_message);
 
     const decrypted_message = CryptoES.AES.decrypt(message, aes_key);
-    console.log(decrypted_message.toString(CryptoES.enc.Utf8));
     return decrypted_message.toString(CryptoES.enc.Utf8);
   }
 
@@ -210,55 +209,7 @@ const ChatScreen = ({ navigation, route }) => {
 
     setInput("");
   };
-  /*
-  useEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection("ChatRooms")
-      .doc(route.params.id)
-      .onSnapshot((doc) => {
-        const messages = doc.data().messages.map((one_message) => {
-          const decrypted_message = decrypt_message(
-            one_message.message,
-            route.params.id
-          );
-          return {
-            id: one_message.timestamp,
-            message: decrypted_message,
-            displayName: one_message.displayName,
-          };
-        });
-        setMessages(messages);
-      });
 
-    return unsubscribe;
-  }, [route]);
-  */
-  /*
-  useEffect(() => {
-    const unsubscribe = firebase
-      .firestore()
-      .collection("ChatRooms")
-      .doc(route.params.id)
-      .onSnapshot((doc) => {
-        const messages = doc.data().messages.map((one_message) => {
-          const decrypted_message = await decrypt_message(
-            one_message.message,
-            route.params.id
-          );
-          return {
-            id: one_message.timestamp,
-            message: decrypted_message,
-            displayName: one_message.displayName,
-          };
-        });
-        console.log(messages); // Add this line to log the messages array
-        setMessages(messages);
-      });
-
-    return unsubscribe;
-  }, [route]);
-*/
   useEffect(() => {
     const unsubscribe = firebase
       .firestore()
@@ -285,34 +236,6 @@ const ChatScreen = ({ navigation, route }) => {
     return unsubscribe;
   }, [route]);
 
-  /*
-  useLayoutEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const doc = await firebase
-          .firestore()
-          .collection("ChatRooms")
-          .doc(route.params.id)
-          .get();
-        const messages = doc.data().messages.map((one_message) => {
-          const decrypted_message = decrypt_message(
-            one_message.message,
-            route.params.id
-          );
-          return {
-            id: one_message.timestamp,
-            message: decrypted_message,
-            displayName: one_message.displayName,
-          };
-        });
-        setMessages(messages);
-      } catch (error) {
-        console.log("Error getting messages:", error);
-      }
-    };
-    fetchMessages();
-  }, [route]);
-*/
   useLayoutEffect(() => {
     const fetchMessages = async () => {
       try {
