@@ -12,21 +12,27 @@ of the users and allow them to communicate with friends, family, and others with
 This app contains many features. The most important ones are listed below:
 
 - Anti-Screenshot Functionality (Android Only)
+- End-to-End Encryption (Android Only)
 - Sequence Message deletion
 - Password Security (client + server)
-- End-to-End Encryption (in progress)
-- API Security (in progess)
+- 2 Factor Authentication
+- API Security
 
 ## Additional Concepts Explored
 
-The following are some ideas that we explored, but weren't able to implement becasuse of various reasons including lack of time and rescoures. A Proof of Concept for each of these will be included soon:
+The following are some ideas that we explored, but weren't able to implement becasuse of various reasons including lack of time and rescoures. A Proof of Concept for some of these will be included soon:
 
+- [Proof of Concept: Blocking photos of screen from another phone](https://docs.google.com/document/d/11bllD5yo5ETtA3gXsbrViu7OMJcCoAETbMNjOK-iCeM/edit)
 - Anti-Screenshot Functionality (IOS)
-- Blocking photos of screen from other phone
+  - Here is a link to solution devlepoed by a company- [ScreenShieldKit](https://screenshieldkit.com).
+- Cross-device Sync
+  - Something along the lines of how google verfies its "you" be sending a prompt on one of your devices, when you try to log in from a new device.
 
 # Setting up the Enviornment
 
-First you would need to download npm on your machine. On Mac the easiest way to do so would be using Homebrew.
+Before we begin with the setup, I would like to note that the code in the main branch only works for Android. If you want to run this app on IOS or the web, please switch to the `IOS-build` branch.
+
+Now to begin with the setup, firstly you would need to download npm on your machine. On Mac, the easiest way to do so would be using Homebrew.
 
 ```bash
 brew install node
@@ -46,7 +52,7 @@ npx expo start
 
 This will start the server. You should see a QR code on your terminal. Scan the QR code with the Expo Go app (Android) or camera (IOS) and the app you are buildng will be displayed on phone! Alternatively, you can use the Android Emulator (requires android studio), IOS simulator, or open the app on the web.
 
-# Rescources
+# Additional Resources
 
 https://reactnative.dev <br />
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Language_overview <br />
