@@ -6,6 +6,7 @@ import { firebase } from "../firebaseConfig";
 import * as Crypto from "expo-crypto";
 var RSAKey = require("react-native-rsa");
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const AddChatScreen = ({ navigation }) => {
@@ -24,7 +25,7 @@ const AddChatScreen = ({ navigation }) => {
     } else if (Platform.OS === "android") {
       await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
     } else {
-      console.log("implement web");
+      await AsyncStorage.setItem(key, value);
     }
 
   }

@@ -7,6 +7,9 @@ import { firebase } from "../firebaseConfig";
 var RSAKey = require("react-native-rsa");
 import * as SecureStore from "expo-secure-store";
 import { Alert } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -20,7 +23,7 @@ const RegisterScreen = ({ navigation }) => {
     } else if (Platform.OS === "android") {
       await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
     } else {
-      console.log("implement web");
+      await AsyncStorage.setItem(key, value);
     }
 
   }

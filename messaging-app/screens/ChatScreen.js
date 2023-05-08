@@ -17,6 +17,7 @@ var RSAKey = require("react-native-rsa");
 import { Alert } from "react-native";
 import CryptoES from "crypto-es";
 import { AES } from "crypto-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 //url needed for profile pic  "https://cencup.com/wp-content/uploads/2019/07/avatar-placeholder.png",
 
@@ -30,14 +31,21 @@ const ChatScreen = ({ navigation, route }) => {
     } else if (Platform.OS === "android") {
       await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
     } else {
-      console.log("implement web");
+      await AsyncStorage.setItem(key, value);
     }
 
   }
 
   async function getValueFor(key) {
-    let result = await SecureStore.getItemAsync(key);
-    return result;
+    if (Platform.OS === "ios" || Platform.OS === "android") {
+      let result = await SecureStore.getItemAsync(key);
+      return result;
+    }
+    else {
+      let result = await AsyncStorage.getItem(key);
+      return result;
+    }
+
   }
 
   async function get_aes_key(room_id) {
