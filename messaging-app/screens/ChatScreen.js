@@ -25,7 +25,14 @@ const ChatScreen = ({ navigation, route }) => {
   const [messages, setMessages] = useState([]);
 
   async function save(key, value) {
-    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+    if (Platform.OS === "ios") {
+      await SecureStore.setItemAsync(key, value);
+    } else if (Platform.OS === "android") {
+      await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+    } else {
+      console.log("implement web");
+    }
+
   }
 
   async function getValueFor(key) {

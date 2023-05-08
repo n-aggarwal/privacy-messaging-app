@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
+import {KeyboardAvoidingView, Platform, StyleSheet, Text, View} from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import { Button, Input, Image } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
@@ -15,9 +15,15 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   async function save(key, value) {
-    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
-  }
+    if (Platform.OS === "ios") {
+      await SecureStore.setItemAsync(key, value);
+    } else if (Platform.OS === "android") {
+      await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+    } else {
+      console.log("implement web");
+    }
 
+  }
   function isValidPassword(password, password2) {
     const passwordRegex =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(?=.*[^\da-zA-Z]).{10,}$/;
