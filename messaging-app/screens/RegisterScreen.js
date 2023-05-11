@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
+import {KeyboardAvoidingView, Platform, StyleSheet, Text, View} from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import { Button, Input, Image } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
@@ -7,6 +7,9 @@ import { firebase } from "../firebaseConfig";
 var RSAKey = require("react-native-rsa");
 import * as SecureStore from "expo-secure-store";
 import { Alert } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -15,9 +18,15 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   async function save(key, value) {
-    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
-  }
+    if (Platform.OS === "ios") {
+      await SecureStore.setItemAsync(key, value);
+    } else if (Platform.OS === "android") {
+      await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+    } else {
+      await AsyncStorage.setItem(key, value);
+    }
 
+  }
   function isValidPassword(password, password2) {
     const passwordRegex =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(?=.*[^\da-zA-Z]).{10,}$/;

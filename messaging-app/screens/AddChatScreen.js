@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import {Platform, StyleSheet, Text, View} from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import { Button, Input } from "react-native-elements";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -6,6 +6,8 @@ import { firebase } from "../firebaseConfig";
 import * as Crypto from "expo-crypto";
 var RSAKey = require("react-native-rsa");
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const AddChatScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
@@ -18,7 +20,14 @@ const AddChatScreen = ({ navigation }) => {
   }, [navigation]);
 
   async function save(key, value) {
-    await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+    if (Platform.OS === "ios") {
+      await SecureStore.setItemAsync(key, value);
+    } else if (Platform.OS === "android") {
+      await SecureStore.setItemAsync(key, value, SecureStore.WHEN_UNLOCKED);
+    } else {
+      await AsyncStorage.setItem(key, value);
+    }
+
   }
 
   const generateRandomKey = async () => {
